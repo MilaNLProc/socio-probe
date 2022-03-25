@@ -45,7 +45,7 @@ class MLDProber:
         le = LabelEncoder()
 
         labels = le.fit_transform(labels)
-        data = pd.DataFrame({"text": text, "labels": labels})
+        data = pd.DataFrame({"text": text, "labels": labels}) # should we seed-shuffle here?
         number_of_labels = len(set(labels))
 
         portions = [0, 0.1, 0.2, 0.4, 0.8, 1.6, 3.2, 6.25, 12.5, 25, 100]
@@ -67,6 +67,7 @@ class MLDProber:
 
             test_start_index = int(portions[index + 1] * number_of_examples / 100)
 
+            # just checking not to go beyond the 100%
             if index > len(portions) - 2:
                 test_end_index = -1
             else:
@@ -78,11 +79,22 @@ class MLDProber:
             sum_of_losses += self.get_loss(train_portion["text"].values.tolist(),
                                            test_portion["labels"].values.tolist(),
                                            test_portion["text"].values.tolist(),
-                                           test_portion["labels"].values.tolist(), number_of_labels, 100, 200)
+                                           test_portion["labels"].values.tolist(), number_of_labels)
 
         return code_length_first_portion + sum_of_losses
 
-    def get_loss(self, train_X, train_y, test_X, test_y, output_size, hiddens, epochs=200):
+    def get_loss(self, train_X, train_y, test_X, test_y, output_size, hiddens=100, epochs=200):
+        """
+        Simply training
+        :param train_X:
+        :param train_y:
+        :param test_X:
+        :param test_y:
+        :param output_size:
+        :param hiddens:
+        :param epochs:
+        :return:
+        """
         embedding_train = self.embedder.encode(train_X)
         embedding_test = self.embedder.encode(test_X)
 
