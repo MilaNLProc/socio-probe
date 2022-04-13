@@ -71,7 +71,7 @@ class ClassicalProber:
         mlp = MLP(self.embedding_size, output_size, hiddens)
 
         loss_function = nn.CrossEntropyLoss()
-        optimizer = torch.optim.Adam(mlp.parameters(), lr=1e-4)
+        optimizer = torch.optim.Adam(mlp.parameters(), lr=5e-5)
 
         for epoch in range(0, epochs):
             for i, data in enumerate(trainloader, 0):
@@ -201,7 +201,7 @@ class MLDProber:
         mlp = MLP(self.embedding_size, output_size, hiddens)
 
         loss_function = nn.CrossEntropyLoss()
-        optimizer = torch.optim.Adam(mlp.parameters(), lr=1e-4)
+        optimizer = torch.optim.Adam(mlp.parameters(), lr=5e-5)
 
         for epoch in range(0, epochs):
             for i, data in enumerate(trainloader, 0):
