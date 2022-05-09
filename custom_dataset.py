@@ -1,8 +1,8 @@
 import os
 import pandas as pd
-from torch.utils.data import Dataset
+from torch.utils import data as dst
 
-class ProbingDataset(Dataset):
+class ProbingDataset(dst.Dataset):
     """
     Simple dataset wrapper to support the probing pipeline
     """
@@ -16,3 +16,29 @@ class ProbingDataset(Dataset):
     def __getitem__(self, idx):
 
         return self.embeddings[idx], self.labels[idx]
+
+
+def tt(tokenizer):
+    def tokenize_function(examples):
+        # Remove empty lines
+        examples["texts"] = [
+            line
+            for line in examples["texts"]]
+
+        return tokenizer(
+            examples["texts"],
+            padding=True, truncation=True)
+    return tokenize_function
+
+def prepare_dataset(dataset, tokenizer):
+
+    dataset = dataset.map(
+        tt(tokenizer),
+        batched=True,
+        remove_columns=["texts"],
+
+    )
+
+    dataset.set_format("torch")
+
+    return dataset
