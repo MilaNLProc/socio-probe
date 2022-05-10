@@ -89,8 +89,9 @@ class ClassicalProber:
         for epoch in range(0, epochs):
             if early_stopped:
                 break
+            pbar = tqdm(total=len(trainloader), position=0)
             for i, data in enumerate(trainloader, 0):
-                pbar = tqdm(total=len(trainloader), position=0)
+
                 pbar.update(1)
                 mlp.train()
                 inputs, targets = data
