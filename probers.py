@@ -251,7 +251,7 @@ class Embedder:
 
     def mean_pooling(self, token_embeddings, attention_mask):
         input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
-        return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9).detach().numpy()
+        return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9).detach().cpu().numpy()
 
     def create_embeddings(self, texts, labels, layers: List, embedding_path):
 
