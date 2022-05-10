@@ -82,6 +82,7 @@ class ClassicalProber:
 
         mlp = MLP(self.embedding_size, output_size, hiddens)
         mlp.to("cuda")
+
         loss_function = nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(mlp.parameters(), lr=5e-5)
 
@@ -93,8 +94,6 @@ class ClassicalProber:
                 break
             pbar = tqdm(total=len(trainloader), position=0)
 
-
-
             for i, data in enumerate(trainloader, 0):
 
                 pbar.update(1)
@@ -103,7 +102,6 @@ class ClassicalProber:
 
                 inputs = inputs.to("cuda")
                 targets = targets.to("cuda")
-
 
                 optimizer.zero_grad()
                 outputs = mlp(inputs)
@@ -280,7 +278,7 @@ class Embedder:
         input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
         return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
 
-    def create_embeddings(self, texts, labels, layers: List, embedding_path):
+    def create_embeddings(self, texts, labels, layers: List, embedding_path, batch_size=32):
 
         file_exists = exists(embedding_path)
 
@@ -293,7 +291,7 @@ class Embedder:
         train_dataset = prepare_dataset(train_dataset, self.tokenizer)
 
         saving_dict = defaultdict(list)
-        train_loader = DataLoader(train_dataset, batch_size=4)
+        train_loader = DataLoader(train_dataset, batch_size=batch_size)
 
         pbar = tqdm(total=len(train_loader), position=0)
         with torch.no_grad():
