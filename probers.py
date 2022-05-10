@@ -81,7 +81,7 @@ class ClassicalProber:
         testloader = torch.utils.data.DataLoader(test_dataset, batch_size=4)
 
         mlp = MLP(self.embedding_size, output_size, hiddens)
-
+        mlp.to("cuda")
         loss_function = nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(mlp.parameters(), lr=5e-5)
 
@@ -89,6 +89,10 @@ class ClassicalProber:
             for i, data in enumerate(trainloader, 0):
                 mlp.train()
                 inputs, targets = data
+
+                inputs = inputs.to("cuda")
+                targets = targets.to("cuda")
+
 
                 optimizer.zero_grad()
                 outputs = mlp(inputs)
@@ -105,6 +109,8 @@ class ClassicalProber:
 
                         for i, data in enumerate(validloader, 0):
                             inputs, targets = data
+                            inputs = inputs.to("cuda")
+                            targets = targets.to("cuda")
 
                             optimizer.zero_grad()
                             outputs = mlp(inputs)
@@ -123,7 +129,10 @@ class ClassicalProber:
             labels = []
             for i, data in enumerate(testloader, 0):
                 inputs, targets = data
+
+                inputs = inputs.to("cuda")
                 outputs = mlp(inputs)
+
 
                 predictions.extend(np.argmax(outputs.detach().numpy(), axis=1).tolist())
                 labels.extend(targets.numpy().tolist())
@@ -211,12 +220,17 @@ class MLDProber:
 
         mlp = MLP(self.embedding_size, output_size, hiddens)
 
+        mlp = mlp.to("cuda")
+
         loss_function = nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(mlp.parameters(), lr=5e-5)
 
         for epoch in range(0, epochs):
             for i, data in enumerate(trainloader, 0):
                 inputs, targets = data
+
+                inputs = inputs.to("cuda")
+                targets = targets.to("cuda")
 
                 optimizer.zero_grad()
                 outputs = mlp(inputs)
