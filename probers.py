@@ -145,7 +145,7 @@ class ClassicalProber:
                 outputs = mlp(inputs)
 
 
-                predictions.extend(np.argmax(outputs.detach().numpy(), axis=1).tolist())
+                predictions.extend(np.argmax(outputs.detach().cpu().numpy(), axis=1).tolist())
                 labels.extend(targets.numpy().tolist())
         return f1_score(labels, predictions, average="macro")
 
