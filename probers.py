@@ -85,11 +85,16 @@ class ClassicalProber:
         loss_function = nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(mlp.parameters(), lr=5e-5)
 
+        validation_steps = int(len(trainloader)/4)
+
         early_stopped = False
         for epoch in range(0, epochs):
             if early_stopped:
                 break
             pbar = tqdm(total=len(trainloader), position=0)
+
+
+
             for i, data in enumerate(trainloader, 0):
 
                 pbar.update(1)
@@ -108,7 +113,7 @@ class ClassicalProber:
 
                 optimizer.step()
 
-                if i % 50 == 0:
+                if i % validation_steps == 0:
                     valid_loss = 0
                     mlp.eval()
                     with torch.no_grad():
