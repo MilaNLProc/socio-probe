@@ -26,8 +26,7 @@ def tt(tokenizer):
             for line in examples["texts"]]
 
         return tokenizer(
-            examples["texts"],
-            truncation=True, padding=True)
+            examples["texts"], padding='max_length', truncation = True, max_length = 42)
     return tokenize_function
 
 def prepare_dataset(dataset, tokenizer):
