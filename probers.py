@@ -245,7 +245,7 @@ class Embedder:
 
     def __init__(self, embedding_model):
         self.tokenizer = AutoTokenizer.from_pretrained(embedding_model)
-        self.model = AutoModel.from_pretrained(embedding_model, output_hidden_states=True)
+        self.model = AutoModel.from_pretrained(embedding_model, output_hidden_states=True).to("cuda")
 
 
 
