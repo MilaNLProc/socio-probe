@@ -42,7 +42,7 @@ class ClassicalProber:
     def __init__(self, embedding_size):
         self.embedding_size = embedding_size
 
-    def run(self, path, ):
+    def run(self, path, batch_size=32):
 
         with open(path, "rb") as filino:
             data = pickle.load(filino)
@@ -61,32 +61,37 @@ class ClassicalProber:
                                                               test_size = 0.5, random_state = 42)
 
             results[l] = self.train_and_test(train_X, train_y, test_X, test_y, eval_X, eval_y, output_size=len(labels),
-                                             hiddens=50)
+                                             hiddens=50, batch_size=batch_size)
 
         return results
 
 
     def train_and_test(self, train_X, train_y, test_X, test_y, eval_X, eval_Y, output_size, hiddens=100, epochs=200,
-                       patience=1):
+                       patience=1, batch_size=32):
         early_stopping = EarlyStopping(patience=patience, verbose=True)
         valid_loss = 20000000
 
         train_dataset = ProbingDataset(train_X, train_y)
-        trainloader = torch.utils.data.DataLoader(train_dataset, batch_size=4)
+        trainloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size)
 
         valid_dataset = ProbingDataset(eval_X, eval_Y)
-        validloader = torch.utils.data.DataLoader(valid_dataset, batch_size=4)
+        validloader = torch.utils.data.DataLoader(valid_dataset, batch_size=batch_size)
 
         test_dataset = ProbingDataset(test_X, test_y)
-        testloader = torch.utils.data.DataLoader(test_dataset, batch_size=4)
+        testloader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size)
 
         mlp = MLP(self.embedding_size, output_size, hiddens)
         mlp.to("cuda")
         loss_function = nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(mlp.parameters(), lr=5e-5)
 
+        early_stopped = False
         for epoch in range(0, epochs):
+            if early_stopped:
+                break
             for i, data in enumerate(trainloader, 0):
+                pbar = tqdm(total=len(trainloader), position=0)
+                pbar.update(1)
                 mlp.train()
                 inputs, targets = data
 
@@ -117,11 +122,13 @@ class ClassicalProber:
 
                             valid_loss += loss_function(outputs, targets)
 
-            early_stopping(valid_loss, mlp)
+                    early_stopping(valid_loss, mlp)
 
-            if early_stopping.early_stop:
-                print("Early stopping")
-                break
+                    if early_stopping.early_stop:
+                        early_stopped = True
+                        break
+
+            pbar.update(1)
 
         predictions = []
 
