@@ -1,19 +1,15 @@
 import numpy as np
-import pandas as pd
-from collections import defaultdict
+
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 import torch
 from tqdm import tqdm
 from pytorchtools import EarlyStopping
 from torch import nn
-from typing import List
-from os.path import exists
-from transformers import *
+
 from sklearn.metrics import f1_score
 from torch.utils.data import DataLoader
-from custom_dataset import ProbingDataset
-from datasets import Dataset
+
 from custom_dataset import *
 import pickle
 
@@ -39,8 +35,9 @@ class ClassicalProber:
     """
     Prober based on the classical framework
     """
-    def __init__(self, embedding_size):
+    def __init__(self, embedding_size, device="cuda"):
         self.embedding_size = embedding_size
+        self.device = device
 
     def run(self, path, batch_size=32):
 
@@ -60,7 +57,12 @@ class ClassicalProber:
             eval_X, test_X, eval_y, test_y = train_test_split(evaluation_X, evaluation_y,
                                                               test_size = 0.5, random_state = 42)
 
-            results[l] = self.train_and_test(train_X, train_y, test_X, test_y, eval_X, eval_y, output_size=len(labels),
+            results[l] = self.train_and_test(train_X,
+                                             train_y,
+                                             test_X,
+                                             test_y,
+                                             eval_X,
+                                             eval_y, output_size=len(labels),
                                              hiddens=50, batch_size=batch_size)
 
         return results
@@ -69,7 +71,6 @@ class ClassicalProber:
     def train_and_test(self, train_X, train_y, test_X, test_y, eval_X, eval_Y, output_size, hiddens=100, epochs=200,
                        patience=1, batch_size=32):
         early_stopping = EarlyStopping(patience=patience, verbose=True)
-        valid_loss = 20000000
 
         train_dataset = ProbingDataset(train_X, train_y)
         trainloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size)
@@ -81,17 +82,18 @@ class ClassicalProber:
         testloader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size)
 
         mlp = MLP(self.embedding_size, output_size, hiddens)
-        mlp.to("cuda")
+        mlp.to(self.device)
 
         loss_function = nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(mlp.parameters(), lr=5e-5)
 
         validation_steps = int(len(trainloader)/4)
 
-        early_stopped = False
         for epoch in range(0, epochs):
-            if early_stopped:
+
+            if early_stopping.early_stop:
                 break
+
             pbar = tqdm(total=len(trainloader), position=0)
 
             for i, data in enumerate(trainloader, 0):
@@ -100,8 +102,8 @@ class ClassicalProber:
                 mlp.train()
                 inputs, targets = data
 
-                inputs = inputs.to("cuda")
-                targets = targets.to("cuda")
+                inputs = inputs.to(self.device)
+                targets = targets.to(self.device)
 
                 optimizer.zero_grad()
                 outputs = mlp(inputs)
@@ -118,8 +120,8 @@ class ClassicalProber:
 
                         for i, data in enumerate(validloader, 0):
                             inputs, targets = data
-                            inputs = inputs.to("cuda")
-                            targets = targets.to("cuda")
+                            inputs = inputs.to(self.device)
+                            targets = targets.to(self.device)
 
                             optimizer.zero_grad()
                             outputs = mlp(inputs)
@@ -127,10 +129,6 @@ class ClassicalProber:
                             valid_loss += loss_function(outputs, targets)
 
                     early_stopping(valid_loss, mlp)
-
-                    if early_stopping.early_stop:
-                        early_stopped = True
-                        break
 
             pbar.update(1)
 
@@ -141,7 +139,7 @@ class ClassicalProber:
             for i, data in enumerate(testloader, 0):
                 inputs, targets = data
 
-                inputs = inputs.to("cuda")
+                inputs = inputs.to(self.device)
                 outputs = mlp(inputs)
 
 
@@ -266,51 +264,5 @@ class MLDProber:
         return final_loss
 
 
-class Embedder:
 
-    def __init__(self, embedding_model):
-        self.tokenizer = AutoTokenizer.from_pretrained(embedding_model)
-        self.model = AutoModel.from_pretrained(embedding_model, output_hidden_states=True).to("cuda")
-
-
-
-    def mean_pooling(self, token_embeddings, attention_mask):
-        input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
-        return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
-
-    def create_embeddings(self, texts, labels, layers: List, embedding_path, batch_size=32):
-
-        file_exists = exists(embedding_path)
-
-        if file_exists:
-            raise Exception("File Already Exists")
-
-        df = pd.DataFrame({"texts": texts})
-
-        train_dataset = Dataset.from_pandas(df)
-        train_dataset = prepare_dataset(train_dataset, self.tokenizer)
-
-        saving_dict = defaultdict(list)
-        train_loader = DataLoader(train_dataset, batch_size=batch_size)
-
-        pbar = tqdm(total=len(train_loader), position=0)
-        with torch.no_grad():
-            self.model.eval()
-            for batch in train_loader:
-                pbar.update(1)
-                batch = {k: v.to("cuda") for k, v in batch.items()}
-                preds = self.model(**batch)
-
-                for layer in layers:
-                    mean_pooling = self.mean_pooling(preds["hidden_states"][layer], batch["attention_mask"]).detach()
-                    mean_pooling = mean_pooling.cpu()
-                    mean_pooling = mean_pooling.numpy()
-                    saving_dict[layer].extend(mean_pooling)
-
-        pbar.close()
-
-        saving_dict["labels"] = labels
-        saving_dict = dict(saving_dict)
-        with open(f"{embedding_path}", "wb") as filino:
-            pickle.dump(saving_dict, filino)
 
