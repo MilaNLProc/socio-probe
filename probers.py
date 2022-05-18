@@ -69,17 +69,17 @@ class ClassicalProber:
 
 
     def train_and_test(self, train_X, train_y, test_X, test_y, eval_X, eval_Y, output_size, hiddens=100, epochs=200,
-                       patience=1, batch_size=32):
-        early_stopping = EarlyStopping(patience=patience, verbose=True)
+                       patience=2, batch_size=32):
+
 
         train_dataset = ProbingDataset(train_X, train_y)
-        trainloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size)
+        trainloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
         valid_dataset = ProbingDataset(eval_X, eval_Y)
-        validloader = torch.utils.data.DataLoader(valid_dataset, batch_size=batch_size)
+        validloader = torch.utils.data.DataLoader(valid_dataset, batch_size=batch_size, shuffle=True)
 
         test_dataset = ProbingDataset(test_X, test_y)
-        testloader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size)
+        testloader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
 
         mlp = MLP(self.embedding_size, output_size, hiddens)
         mlp.to(self.device)
@@ -89,9 +89,12 @@ class ClassicalProber:
 
         validation_steps = int(len(trainloader)/4)
 
+        early_stopping = EarlyStopping(patience=patience, verbose=True)
+
         for epoch in range(0, epochs):
 
             if early_stopping.early_stop:
+                print("Second Early STOP")
                 break
 
             pbar = tqdm(total=len(trainloader), position=0)
@@ -100,6 +103,7 @@ class ClassicalProber:
 
                 pbar.update(1)
                 mlp.train()
+
                 inputs, targets = data
 
                 inputs = inputs.to(self.device)
@@ -130,7 +134,13 @@ class ClassicalProber:
 
                     early_stopping(valid_loss, mlp)
 
+                if early_stopping.early_stop:
+                    print("First Early STOP")
+                    break
+
             pbar.update(1)
+
+        mlp = torch.load("checkpoint.pt")
 
         predictions = []
 
