@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 
 from sklearn.model_selection import train_test_split
@@ -6,6 +8,9 @@ import torch
 from tqdm import tqdm
 from pytorchtools import EarlyStopping
 from torch import nn
+import random
+import string
+
 
 from sklearn.metrics import f1_score
 from torch.utils.data import DataLoader
@@ -89,7 +94,10 @@ class ClassicalProber:
 
         validation_steps = int(len(trainloader)/4)
 
-        early_stopping = EarlyStopping(patience=patience, verbose=True)
+
+        N = 10
+        name = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(N)) + ".pt"
+        early_stopping = EarlyStopping(patience=patience, verbose=True, path=name)
 
         for epoch in range(0, epochs):
 
@@ -135,13 +143,12 @@ class ClassicalProber:
                     early_stopping(valid_loss, mlp)
 
                 if early_stopping.early_stop:
-                    print("First Early STOP")
                     break
 
             pbar.update(1)
 
         mlp = MLP(self.embedding_size, output_size, hiddens)
-        mlp.load_state_dict(torch.load("checkpoint.pt"))
+        mlp.load_state_dict(torch.load(name))
         mlp.to(self.device)
         mlp.eval()
 
@@ -158,6 +165,7 @@ class ClassicalProber:
 
                 predictions.extend(np.argmax(outputs.detach().cpu().numpy(), axis=1).tolist())
                 labels.extend(targets.numpy().tolist())
+        os.remove(name)
         return f1_score(labels, predictions, average="macro")
 
 
