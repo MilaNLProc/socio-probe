@@ -142,6 +142,7 @@ class ClassicalProber:
 
         mlp = MLP(self.embedding_size, output_size, hiddens)
         mlp.load_state_dict(torch.load("checkpoint.pt"))
+        mlp.to(self.device)
         mlp.eval()
 
         predictions = []
