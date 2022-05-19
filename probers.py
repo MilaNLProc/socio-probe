@@ -97,7 +97,7 @@ class ClassicalProber:
 
         N = 10
         name = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(N)) + ".pt"
-        early_stopping = EarlyStopping(patience=patience, verbose=True, path=name)
+        early_stopping = EarlyStopping(patience=patience, verbose=False, path=name)
 
         for epoch in range(0, epochs):
 
@@ -105,11 +105,11 @@ class ClassicalProber:
                 print("Second Early STOP")
                 break
 
-            pbar = tqdm(total=len(trainloader), position=0)
+            #pbar = tqdm(total=len(trainloader), position=0)
 
             for i, data in enumerate(trainloader, 0):
 
-                pbar.update(1)
+                #pbar.update(1)
                 mlp.train()
 
                 inputs, targets = data
@@ -145,7 +145,7 @@ class ClassicalProber:
                 if early_stopping.early_stop:
                     break
 
-            pbar.update(1)
+            #pbar.update(1)
 
         mlp = MLP(self.embedding_size, output_size, hiddens)
         mlp.load_state_dict(torch.load(name))
