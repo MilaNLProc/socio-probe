@@ -66,6 +66,8 @@ class MLPTrainer:
 
                 inputs, targets = data
 
+                print(targets)
+
                 inputs = inputs.to(self.device)
                 targets = targets.to(self.device)
 
