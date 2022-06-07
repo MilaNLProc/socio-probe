@@ -231,8 +231,7 @@ class MLDProber:
 
                 test_start_index = int(portions[index + 1] * number_of_examples / 100)
 
-                print(f"training on partition from {portions[index]} to {portions[index + 1]}")
-                print(f"testing on partition {portions[index + 1]} to the next one")
+
 
                 # just checking not to go beyond the 100%
                 if index > len(portions) - 2:
@@ -244,13 +243,18 @@ class MLDProber:
                 test_portion_X = loaded_data[l][test_start_index:test_end_index]
 
                 train_portion_y = loaded_data["labels"][train_start_index:train_end_index]
-                test_portion_y = loaded_data["labels"][train_start_index:train_end_index]
+                test_portion_y = loaded_data["labels"][test_start_index:test_end_index]
 
                 val_portion_X = valid_loaded[l]
                 val_portion_y = valid_loaded["labels"]
-                print(len(train_portion_X))
-                print(len(test_portion_X))
-                print(len(val_portion_X))
+
+                print(len(train_portion_X), type(train_portion_X))
+                print(len(test_portion_X), type(test_portion_X))
+                print(len(val_portion_X), type(val_portion_X))
+
+                print(f"training on partition from {portions[index]} to {portions[index + 1]}, {train_start_index}:{train_end_index}, ")
+                print(f"testing on partition {portions[index + 1]} to the next one")
+
                 sum_of_losses += self.train_and_test(train_portion_X,
                                                      train_portion_y,
                                                      test_portion_X,
