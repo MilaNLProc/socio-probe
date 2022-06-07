@@ -75,5 +75,8 @@ def main():
                         classical_filino.write(f"{m},{r},{layer[0]},{f1},{loss}\n")
                         classical_filino.flush()
 
-
                 os.remove(f"embeddings/test{device}.pkl")
+
+
+if __name__ == "__main__":
+    main()
