@@ -48,8 +48,6 @@ class MLPTrainer:
 
     def train(self, trainloader, validloader, testloader, name, epochs=100, patience=5):
 
-        print(f"Lenghts: {len(trainloader)},{len(validloader)},{len(testloader)}")
-
         self.mlp = MLP(self.embedding_size, self.output_size, self.hiddens)
         self.mlp.to(self.device)
 
@@ -66,7 +64,6 @@ class MLPTrainer:
 
                 inputs, targets = data
 
-                print(targets)
 
                 inputs = inputs.to(self.device)
                 targets = targets.to(self.device)
@@ -92,7 +89,7 @@ class MLPTrainer:
                     outputs = self.mlp(inputs)
 
                     valid_loss += loss_function(outputs, targets)
-            print(f"valid loss: {valid_loss}")
+
             scheduler.step(valid_loss)
             early_stopping(valid_loss, self.mlp)
 
@@ -247,10 +244,6 @@ class MLDProber:
 
                 val_portion_X = valid_loaded[l]
                 val_portion_y = valid_loaded["labels"]
-
-                print(len(train_portion_X), type(train_portion_X))
-                print(len(test_portion_X), type(test_portion_X))
-                print(len(val_portion_X), type(val_portion_X))
 
                 print(f"training on partition from {portions[index]} to {portions[index + 1]}, {train_start_index}:{train_end_index}, ")
                 print(f"testing on partition {portions[index + 1]} to the next one")
