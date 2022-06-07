@@ -17,7 +17,7 @@ def parse_args():
         help="Location of the dataset. Should be a pandas dataframe with headers",
     )
 
-    parser.add_argument("--epochs", type=int, help="number of epochs")
+    parser.add_argument("--device", type=str, help="device num")
 
     args = parser.parse_args()
     return args
