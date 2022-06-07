@@ -76,7 +76,6 @@ class ClassicalProber:
     def train_and_test(self, train_X, train_y, test_X, test_y, eval_X, eval_Y, output_size, hiddens=100, epochs=200,
                        patience=2, batch_size=32):
 
-
         train_dataset = ProbingDataset(train_X, train_y)
         trainloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
@@ -94,7 +93,6 @@ class ClassicalProber:
 
         validation_steps = int(len(trainloader)/4)
 
-
         N = 10
         name = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(N)) + ".pt"
         early_stopping = EarlyStopping(patience=patience, verbose=False, path=name)
@@ -105,11 +103,8 @@ class ClassicalProber:
                 print("Second Early STOP")
                 break
 
-            #pbar = tqdm(total=len(trainloader), position=0)
-
             for i, data in enumerate(trainloader, 0):
 
-                #pbar.update(1)
                 mlp.train()
 
                 inputs, targets = data
@@ -162,7 +157,6 @@ class ClassicalProber:
                 inputs = inputs.to(self.device)
                 outputs = mlp(inputs)
 
-
                 predictions.extend(np.argmax(outputs.detach().cpu().numpy(), axis=1).tolist())
                 labels.extend(targets.numpy().tolist())
         os.remove(name)
@@ -181,51 +175,61 @@ class MLDProber:
         self.embedder = embedder
         self.embedding_size = embedding_size
 
-
-    def run(self, text, labels):
+    def run(self, path, batch_size=32):
         le = LabelEncoder()
 
-        labels = le.fit_transform(labels)
-        data = pd.DataFrame({"text": text, "labels": labels}) # should we seed-shuffle here?
+        with open(path, "rb") as filino:
+            loaded_data = pickle.load(filino)
+
+        layers = list(loaded_data.keys())
+        layers.remove("labels")
+
+        labels = le.fit_transform(loaded_data["labls"])
+
         number_of_labels = len(set(labels))
 
         portions = [0, 0.1, 0.2, 0.4, 0.8, 1.6, 3.2, 6.25, 12.5, 25, 100]
-        number_of_examples = len(data)
+        number_of_examples = len(loaded_data)
 
         code_length_first_portion = int(portions[1] * number_of_examples / 100) * np.log2(number_of_labels)
 
-        sum_of_losses = 0
-        for index, p in enumerate(portions):
+        results = {}
+        for l in layers:
 
-            # we train on portion (i, i +1) and we test on
+            sum_of_losses = 0
+            for index, p in enumerate(portions):
 
-            if p >= 25:
-                # from this point there is no other portion to train on
-                continue
+                # we train on portion (i, i +1) and we test on
 
-            train_start_index = int(portions[index] * number_of_examples / 100)
-            train_end_index = int(portions[index + 1] * number_of_examples / 100)
+                if p >= 25:
+                    # from this point there is no other portion to train on
+                    continue
 
-            test_start_index = int(portions[index + 1] * number_of_examples / 100)
+                train_start_index = int(portions[index] * number_of_examples / 100)
+                train_end_index = int(portions[index + 1] * number_of_examples / 100)
 
-            print(f"training on partition from {portions[index]} to {portions[index + 1]}")
-            print(f"testing on partition {portions[index + 1]} to the next one")
+                test_start_index = int(portions[index + 1] * number_of_examples / 100)
 
-            # just checking not to go beyond the 100%
-            if index > len(portions) - 2:
-                test_end_index = -1
-            else:
-                test_end_index = int(portions[index + 2] * number_of_examples / 100)
+                print(f"training on partition from {portions[index]} to {portions[index + 1]}")
+                print(f"testing on partition {portions[index + 1]} to the next one")
 
-            train_portion = data.iloc[train_start_index:train_end_index]
-            test_portion = data.iloc[test_start_index:test_end_index]
+                # just checking not to go beyond the 100%
+                if index > len(portions) - 2:
+                    test_end_index = -1
+                else:
+                    test_end_index = int(portions[index + 2] * number_of_examples / 100)
 
-            sum_of_losses += self.get_loss(train_portion["text"].values.tolist(),
-                                           test_portion["labels"].values.tolist(),
-                                           test_portion["text"].values.tolist(),
-                                           test_portion["labels"].values.tolist(), number_of_labels)
+                train_portion = loaded_data[l][train_start_index:train_end_index]
+                test_portion = loaded_data[l][test_start_index:test_end_index]
 
-        return {"code_length": code_length_first_portion, "sum_of_losses": sum_of_losses}
+                sum_of_losses += self.get_loss(train_portion["text"].values.tolist(),
+                                               loaded_data["labels"].values.tolist(),
+                                               test_portion["text"].values.tolist(),
+                                               loaded_data["labels"].values.tolist(),
+                                               number_of_labels)
+
+            results[l] = {"code_length": code_length_first_portion, "sum_of_losses": sum_of_losses}
+        return results
 
     def get_loss(self, train_X, train_y, test_X, test_y, output_size, hiddens=50, epochs=200):
         """

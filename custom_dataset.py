@@ -1,5 +1,3 @@
-import os
-import pandas as pd
 from torch.utils import data as dst
 
 class ProbingDataset(dst.Dataset):
@@ -26,7 +24,7 @@ def tt(tokenizer):
             for line in examples["texts"]]
 
         return tokenizer(
-            examples["texts"], padding='max_length', truncation = True, max_length = 200)
+            examples["texts"], padding='max_length', truncation=True, max_length=300)
     return tokenize_function
 
 def prepare_dataset(dataset, tokenizer):
