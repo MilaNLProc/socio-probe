@@ -115,7 +115,7 @@ class MLPTrainer:
                 outputs = mlp(inputs)
                 test_loss += loss_function(outputs, targets).item()
                 predictions.extend(np.argmax(outputs.detach().cpu().numpy(), axis=1).tolist())
-                labels.extend(targets.numpy().tolist())
+                labels.extend(targets.detach().cpu().numpy().tolist())
 
         os.remove(name)
 
