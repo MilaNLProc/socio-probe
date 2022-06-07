@@ -62,7 +62,6 @@ class MLPTrainer:
         for epoch in range(0, epochs):
 
             for i, data in enumerate(trainloader, 0):
-                print(i)
                 self.mlp.train()
 
                 inputs, targets = data
@@ -91,7 +90,7 @@ class MLPTrainer:
                     outputs = self.mlp(inputs)
 
                     valid_loss += loss_function(outputs, targets)
-
+            print(f"valid loss: {valid_loss}")
             scheduler.step(valid_loss)
             early_stopping(valid_loss, self.mlp)
 
