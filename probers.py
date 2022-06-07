@@ -142,6 +142,9 @@ class ClassicalProber:
 
         le = LabelEncoder()
         labels = le.fit_transform(data["labels"])
+
+        number_of_labels = len(set(labels))
+
         results = {}
         for l in layers:
             train_X, evaluation_X, train_y, evaluation_y = train_test_split(data[l], labels,
@@ -154,7 +157,7 @@ class ClassicalProber:
                                              test_X,
                                              test_y,
                                              eval_X,
-                                             eval_y, output_size=len(labels),
+                                             eval_y, output_size=number_of_labels,
                                              hiddens=100, batch_size=batch_size)
 
         return results
@@ -195,6 +198,7 @@ class MLDProber:
         valid_loaded = {}
 
         val_percentage = int(len(c_data["labels"]) * 0.10)
+        c_data["labels"] = le.fit_transform(c_data["labels"])
 
         for key, value in c_data.items():
             loaded_data[key] = c_data[key][val_percentage:]
@@ -203,9 +207,7 @@ class MLDProber:
         layers = list(loaded_data.keys())
         layers.remove("labels")
 
-        labels = le.fit_transform(loaded_data["labels"])
-
-        number_of_labels = len(set(labels))
+        number_of_labels = len(set(c_data["labels"]))
 
         portions = [0, 0.1, 0.2, 0.4, 0.8, 1.6, 3.2, 6.25, 12.5, 25, 100]
         number_of_examples = len(loaded_data["labels"])
@@ -254,7 +256,7 @@ class MLDProber:
                                                      test_portion_X,
                                                      test_portion_y,
                                                      val_portion_X,
-                                                     val_portion_y, output_size=len(labels),
+                                                     val_portion_y, output_size=number_of_labels,
                                                      hiddens=100, batch_size=batch_size)["loss"]
 
             results[l] = {"code_length": code_length_first_portion, "sum_of_losses": sum_of_losses}
