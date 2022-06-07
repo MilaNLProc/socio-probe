@@ -48,6 +48,8 @@ class MLPTrainer:
 
     def train(self, trainloader, validloader, testloader, name, epochs=100, patience=5):
 
+        print(f"Lenghts: {len(trainloader)},{len(validloader)},{len(testloader)}")
+
         self.mlp = MLP(self.embedding_size, self.output_size, self.hiddens)
         self.mlp.to(self.device)
 
@@ -60,6 +62,7 @@ class MLPTrainer:
         for epoch in range(0, epochs):
 
             for i, data in enumerate(trainloader, 0):
+                print(i)
                 self.mlp.train()
 
                 inputs, targets = data
@@ -108,6 +111,8 @@ class MLPTrainer:
                 inputs, targets = data
 
                 inputs = inputs.to(self.device)
+                targets = targets.to(self.device)
+
                 outputs = mlp(inputs)
                 test_loss += loss_function(outputs, targets).item()
                 predictions.extend(np.argmax(outputs.detach().cpu().numpy(), axis=1).tolist())
