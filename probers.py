@@ -192,7 +192,7 @@ class MLDProber:
         loaded_data = {}
         valid_loaded = {}
 
-        val_percentage = int(len(c_data) * 0.10)
+        val_percentage = int(len(c_data["labels"]) * 0.10)
 
         for key, value in c_data.items():
             loaded_data[key] = c_data[key][val_percentage:]
