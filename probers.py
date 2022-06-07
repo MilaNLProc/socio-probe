@@ -206,7 +206,7 @@ class MLDProber:
         number_of_labels = len(set(labels))
 
         portions = [0, 0.1, 0.2, 0.4, 0.8, 1.6, 3.2, 6.25, 12.5, 25, 100]
-        number_of_examples = len(loaded_data)
+        number_of_examples = len(loaded_data["labels"])
 
         code_length_first_portion = int(portions[1] * number_of_examples / 100) * np.log2(number_of_labels)
 
