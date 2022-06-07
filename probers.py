@@ -244,7 +244,7 @@ class MLDProber:
 
                 val_portion_X = valid_loaded[l]
                 val_portion_y = valid_loaded["labels"]
-
+                print(train_portion_X)
                 sum_of_losses += self.train_and_test(train_portion_X,
                                                      train_portion_y,
                                                      test_portion_X,
