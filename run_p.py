@@ -29,19 +29,18 @@ def main():
     os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"] = device
 
-
     pre_t_models = "aajrami/bert-ascii-base,aajrami/bert-mlm-base,aajrami/bert-fc-base,aajrami/bert-rand-base,aajrami/bert-sr-base".split(",")
     debertas = "microsoft/deberta-v3-base,microsoft/deberta-v3-large,microsoft/deberta-v3-xsmall,microsoft/deberta-v3-small".split(",")
     all_models = "nyu-mll/roberta-base-1B-1,nyu-mll/roberta-base-1B-2,nyu-mll/roberta-base-1B-3,nyu-mll/roberta-base-100M-1,nyu-mll/roberta-base-100M-2,nyu-mll/roberta-base-100M-3,nyu-mll/roberta-base-10M-1,nyu-mll/roberta-base-10M-2,nyu-mll/roberta-base-10M-3,nyu-mll/roberta-med-small-1M-1,nyu-mll/roberta-med-small-1M-2,nyu-mll/roberta-med-small-1M-3,roberta-base,roberta-large".split(",")
-    all_m = all_models + pre_t_models + debertas
-
+    new_models = "KoichiYasuoka/roberta-large-english-upos,Jean-Baptiste/roberta-large-ner-english,cointegrated/roberta-large-cola-krishna2020,roberta-large-mnli,navteca/roberta-large-squad2,howey/roberta-large-sst2,howey/roberta-large-qqp".split(",")
+    all_m = new_models + all_models + pre_t_models + debertas
 
     dataset_location = args.dataset_name
     dataset_name = dataset_location.split("/")[1]
 
     total = pd.read_csv(dataset_location)
 
-    average_runs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    average_runs = [0, 1, 2, 3, 4]
 
     with open(f"probes/online_{dataset_name}", "w") as online_filino:
 
@@ -62,7 +61,7 @@ def main():
                         loss = layer[1]['sum_of_losses']
                         online_filino.write(f"{m},{r},{layer[0]},{f1},{loss}"+"\n")
                         online_filino.flush()
-
+                    del mldprober
                 for r in average_runs:
 
                     mldprober = ClassicalProber(embe.model.config.hidden_size)
@@ -74,7 +73,7 @@ def main():
                         loss = layer[1]['loss']
                         classical_filino.write(f"{m},{r},{layer[0]},{f1},{loss}\n")
                         classical_filino.flush()
-
+                    del mldprober
                 os.remove(f"embeddings/test{device}.pkl")
 
 
