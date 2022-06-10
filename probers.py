@@ -228,8 +228,6 @@ class MLDProber:
 
                 test_start_index = int(portions[index + 1] * number_of_examples / 100)
 
-
-
                 # just checking not to go beyond the 100%
                 if index > len(portions) - 2:
                     test_end_index = -1
