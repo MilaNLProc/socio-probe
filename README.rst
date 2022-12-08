@@ -2,25 +2,30 @@
 Social Probing
 ==============
 
+Code has been built on two simple abstractions:
+
+The first is **Embedder** that is used to create embeddings extracted from specific layers and save them to disk.
+
+The second in is the **Probers** that train classifiers for porbing.
+
 Example
 -------
 
 .. code-block:: python
 
-    from probers import MLDProber
-    from sentence_transformers import SentenceTransformer
-    import pandas as pd
 
-    st = SentenceTransformer("nyu-mll/roberta-med-small-1M-3")
+        embe = Embedder(m)
+        embe.create_embeddings(total["text"].values.tolist(),
+                               total["label"].values.tolist(),
+                               list(range(1, embe.model.config.num_hidden_layers+1)),
+                               f"embeddings/embs_save.pkl")
 
-    mldprober = MLDProber(st, 512)
+        prober = ClassicalProber(embe.model.config.hidden_size)
+        
+        macro_f_dict = prober.run(f"embeddings/embs_save.pkl")
+        for layer in macro_f_dict.items():
 
-    english_train = "https://github.com/MilaNLProc/translation_bias/raw/master/data/en_us/en_us_TRAIN.xlsx"
-    english_test = "https://github.com/MilaNLProc/translation_bias/raw/master/data/en_us/en_us_TEST.xlsx"
+            f1 = layer[1]['f1']
+            loss = layer[1]['loss']
 
-
-    english_train = pd.read_excel(english_train)
-    english_train = english_train.dropna()
-
-
-    mldprober.run(english_train["text"].values.tolist(), english_train["gender"].values.tolist())
+    
