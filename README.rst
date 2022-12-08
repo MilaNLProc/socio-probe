@@ -1,6 +1,6 @@
-==============
-Social Probing
-==============
+===========
+Socio Probe
+===========
 
 Code has been built on two simple abstractions:
 
@@ -28,4 +28,8 @@ Example
             f1 = layer[1]['f1']
             loss = layer[1]['loss']
 
-    
+
+Refs
+----
+
+We use early stopping code coming from: https://github.com/Bjarten/early-stopping-pytorch
