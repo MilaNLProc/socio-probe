@@ -17,8 +17,8 @@ Example
 
 
         embe = Embedder(m)
-        embe.create_embeddings(total["text"].values.tolist(),
-                               total["label"].values.tolist(),
+        embe.create_embeddings(dataset["text"].tolist(),
+                               dataset["label"].tolist(),
                                list(range(1, embe.model.config.num_hidden_layers+1)),
                                f"embeddings/embs_save.pkl")
 
