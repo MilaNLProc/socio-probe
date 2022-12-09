@@ -8,6 +8,8 @@ The first is **Embedder** that is used to create embeddings extracted from speci
 
 The second in is the **Probers** that train classifiers for porbing.
 
+A complete run example can be found in **run_p.py**.
+
 Example
 -------
 
